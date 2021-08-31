@@ -1,0 +1,25 @@
+language: generic 
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t thebigbara/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true thebigbara/react-test npm test
+
+after_success:
+  - docker build -t thebigbara/multi-client ./client
+  - docker build -t thebigbara/multi-nginx ./nginx
+  - docker build -t thebigbara/multi-server ./server
+  - docker build -t thebigbara/multi-worker ./worker
+  
+  # Login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  
+  # Push to docker hub
+  - docker push thebigbara/multi-client
+  - docker push thebigbara/multi-nginx
+  - docker push thebigbara/multi-server
+  - docker push thebigbara/multi-worker
